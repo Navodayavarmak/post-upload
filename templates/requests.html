@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Request Logs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .controls button {
+            margin: 5px;
+            padding: 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            word-wrap: break-word;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        .file-link {
+            display: block;
+            margin-bottom: 3px;
+            color: #0366d6;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        .file-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+
+    <script>
+        // Auto-refresh every 10 seconds
+        setTimeout(() => {
+            window.location.reload();
+        }, 10000);
+
+        function clearLogs() {
+            fetch('/clear', { method: 'POST' })
+                .then(() => window.location.reload());
+        }
+
+        function downloadLogs() {
+            window.location.href = '/download';
+        }
+    </script>
+</head>
+<body>
+    <h2>Received Requests</h2>
+
+    <div class="controls">
+        <button onclick="clearLogs()">🗑️ Clear Logs</button>
+        <button onclick="downloadLogs()">📥 Download Logs (JSON)</button>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <tr>
+                <th style="width: 140px;">Time</th>
+                <th style="width: 80px;">Method</th>
+                <th style="width: 300px;">Headers</th>
+                <th style="width: 200px;">Args</th>
+                <th style="width: 300px;">Body</th>
+                <th style="width: 250px;">Files</th>
+            </tr>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.timestamp }}</td>
+                <td>{{ log.method }}</td>
+                <td><pre>{{ log.headers }}</pre></td>
+                <td><pre>{{ log.args }}</pre></td>
+                <td><pre>{{ log.body }}</pre></td>
+                <td>
+                    {% if log.files %}
+                        {% for filename, info in log.files.items() %}
+                            <a href="{{ url_for('uploaded_file', filename=filename) }}" 
+                               target="_blank" class="file-link" 
+                               title="Content-Type: {{ info.content_type }}">
+                               📎 {{ filename }}
+                            </a>
+                        {% endfor %}
+                    {% else %}
+                        <em>No files</em>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>
